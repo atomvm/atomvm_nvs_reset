@@ -1,0 +1,35 @@
+menu "AtomVM NVS Reset Configuration"
+
+	config ATOMVM_NVS_RESET_ENABLE
+		bool  "Enable reset pin"
+		default y
+		help
+			When enabled, a designated pin may be used to reset non-volatile storage when held during boot.
+
+	config ATOMVM_NVS_RESET_PIN
+		int "Reset pin"
+		range 0 39
+		default 0
+		help
+			GPIO pin used to reset non-volatile storage when held during boot.
+
+	config ATOMVM_NVS_RESET_HOLD_SECS
+		int "Reset hold (in seconds)"
+		range 1 5
+		default 3
+		help
+			Number of seconds to hold reset pin before non-volatile storage is reset.
+
+	config ATOMVM_NVS_RESET_INVERT_PIN
+		bool "Invert pin to hold high instead of low"
+		default n
+		help
+			Invert the pin value so that the pin must be held high instead of low in order to reset non-volatile storage.
+
+	config ATOMVM_NVS_RESET_REBOOT
+		bool "Reboot after NVS reset"
+		default y
+		help
+			Reboot the device after resetting non-volatile storage.
+
+endmenu
