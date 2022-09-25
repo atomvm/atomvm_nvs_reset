@@ -25,7 +25,7 @@ set(ATOMVM_NVS_RESET_COMPONENT_SRCS
 idf_component_register(
     SRCS ${ATOMVM_NVS_RESET_COMPONENT_SRCS}
     INCLUDE_DIRS "nifs/include"
-    PRIV_REQUIRES "libatomvm" "main" "nvs_flash"
+    PRIV_REQUIRES "libatomvm" "avm_sys" "nvs_flash"
 )
 
 idf_build_set_property(
