@@ -32,4 +32,16 @@ menu "AtomVM NVS Reset Configuration"
 		help
 			Reboot the device after resetting non-volatile storage.
 
+	config ATOMVM_NVS_RESET_BOOT_PARTITION_CLICKS
+		int "Number of button clicks to reset boot partition only"
+		default 3
+		help
+			The number of clicks that must occur within NVS_RESET_BOOT_PARTITION_CLICK_WINDOW_SECS to reset to the boot partition only.
+
+	config ATOMVM_NVS_RESET_BOOT_PARTITION_CLICK_WINDOW_SECS
+		int "Time interval (secs) in which button clicks should occur"
+		default 1
+		help
+			Time interval (secs) in which button clicks should occur.
+
 endmenu

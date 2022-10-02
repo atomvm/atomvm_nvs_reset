@@ -57,6 +57,36 @@ static void button_press_handler(void *arg)
     }
 }
 
+#define ATOMVM_NAMESPACE "atomvm"
+#define BOOT_PARTITION_KEY "boot_partition"
+
+static esp_err_t reset_boot_partition()
+{
+    esp_err_t err;
+
+    err = nvs_flash_init();
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "Unable to initialize NVS flash.");
+        return err;
+    }
+
+    nvs_handle nvs;
+    err = nvs_open(ATOMVM_NAMESPACE, NVS_READWRITE, &nvs);
+    if (err != ESP_OK) {
+        ESP_LOGI(TAG, "Unable to open NVS namespace %s.", ATOMVM_NAMESPACE);
+        return err;
+    }
+
+    err = nvs_erase_key(nvs, BOOT_PARTITION_KEY);
+    if (!(err == ESP_ERR_NVS_NOT_FOUND || err == ESP_OK)) {
+        ESP_LOGW(TAG, "Unable to erase key %s in NVS namespace %s.", BOOT_PARTITION_KEY, ATOMVM_NAMESPACE);
+    }
+
+    nvs_close(nvs);
+
+    return err;
+}
+
 static void monitor_button_task(void *args)
 {
     bool invert_pin =
@@ -111,9 +141,12 @@ static void monitor_button_task(void *args)
 
     ESP_LOGI(TAG, "monitor_button_task is running.");
 
+    unsigned num_clicks = 0;
     uint64_t start_ms = current_ms();
+    uint64_t click_seq_start_ms = 0;
     for (;;) {
-        uint64_t elapsed_ms = current_ms() - start_ms;
+        uint64_t curr_ms = current_ms();
+        uint64_t elapsed_ms = curr_ms - start_ms;
         int msg;
         BaseType_t res = xQueueReceive(button_press_queue, &msg, 0);
         if (res == pdPASS) {
@@ -121,11 +154,26 @@ static void monitor_button_task(void *args)
             int level = gpio_get_level(pin) ^ invert_pin;
             if (!level) {
                 // button pressed
-                start_ms = current_ms();
                 ESP_LOGI(TAG, "Pin %i pressed.", pin);
+                start_ms = current_ms();
+                if (!click_seq_start_ms) {
+                    ESP_LOGI(TAG, "Started pin press counter for pin %i ...", pin);
+                    click_seq_start_ms = start_ms;
+                }
             } else {
                 // button released
-                if (elapsed_ms > CONFIG_ATOMVM_NVS_RESET_HOLD_SECS * 1000) {
+                num_clicks++;
+                if (num_clicks >= CONFIG_ATOMVM_NVS_RESET_BOOT_PARTITION_CLICKS && (curr_ms - click_seq_start_ms) < CONFIG_ATOMVM_NVS_RESET_BOOT_PARTITION_CLICK_WINDOW_SECS * 1000 ) {
+                    num_clicks = 0;
+                    reset_boot_partition();
+                    if (err == ESP_OK) {
+                        ESP_LOGI(TAG, "Reset boot partition!");
+                    }
+                    if (CONFIG_ATOMVM_NVS_RESET_REBOOT) {
+                        ESP_LOGI(TAG, "Restarting device ...");
+                        esp_restart();
+                    }
+                } else if (elapsed_ms > CONFIG_ATOMVM_NVS_RESET_HOLD_SECS * 1000) {
                     ESP_LOGI(TAG, "Pin %i released after %llu ms.", pin, elapsed_ms);
                     err = nvs_flash_erase();
                     if (err != ESP_OK) {
@@ -141,6 +189,10 @@ static void monitor_button_task(void *args)
                     ESP_LOGI(TAG, "Pin %i released too early!  elapsed_ms=%llu", pin, elapsed_ms);
                 }
             }
+        } else if (click_seq_start_ms && (curr_ms - click_seq_start_ms) >= CONFIG_ATOMVM_NVS_RESET_BOOT_PARTITION_CLICK_WINDOW_SECS * 1000) {
+            ESP_LOGI(TAG, "Pin press counter for pin %i expired.", pin);
+            num_clicks = 0;
+            click_seq_start_ms = 0;
         }
         vTaskDelay(BUTTON_PRESS_TASK_SLEEP_MS / portTICK_PERIOD_MS);
     }

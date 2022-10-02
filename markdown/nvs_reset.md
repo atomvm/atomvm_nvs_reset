@@ -2,6 +2,8 @@
 
 The `atomvm_nvs_reset` Nif provides a mechanism to reset non-volatile storage (NVS) and reboot the device when a designated pin is held low (or optionally high) for a designated period of seconds, providing a kind of "paperclip" reset facility commonly found on routers, modems, and other electronic appliances.
 
+The reset pin may also be configured to only reset the boot partition after a specified number of button clicks (by default, 3) within a designated time window (by default, 1, second).  Using this feature, you can preserve all application-level configuration and only reset which partition the ESP32 device should boot from.
+
 This Nif does not provide any Erlang APIs.  Instead, it is implemented as a plugin module into the AtomVM virtual machine.
 
 When installed, this Nif will instantiate an RTOS queue and start a lightweight RTOS task which monitors a designated GPIO pin.  If the pin is held low (or optionally high) for a designated period of seconds, NVS will be erased and (otpionally) the device will be rebooted.
@@ -31,3 +33,5 @@ The following table enumerates the configuration settings in this menu.
 | `ATOMVM_NVS_RESET_HOLD_SECS` | `1..5` | `3` | Number of seconds to hold reset pin before non-volatile storage is reset. |
 | `ATOMVM_NVS_RESET_INVERT_PIN` | `bool` | `n` | Invert the pin value so that the pin must be held high instead of low in order to reset non-volatile storage. |
 | `ATOMVM_NVS_RESET_REBOOT` | `bool` | `y` | Reboot the device after resetting non-volatile storage. |
+| `ATOMVM_NVS_RESET_BOOT_PARTITION_CLICKS` | `int` | `3` | The number of clicks that must occur within `NVS_RESET_BOOT_PARTITION_CLICK_WINDOW_SECS` to reset to the boot partition only. |
+| `ATOMVM_NVS_RESET_BOOT_PARTITION_CLICK_WINDOW_SECS` | `int` | `1` | Time interval (secs) in which button clicks should occur. |
