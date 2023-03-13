@@ -20,6 +20,13 @@ menu "AtomVM NVS Reset Configuration"
 		help
 			Number of seconds to hold reset pin before non-volatile storage is reset.
 
+	config ATOMVM_NVS_RESET_HOLD_TIMEOUT_SECS
+		int "Reset timeout hold (in seconds)"
+		range 1 5
+		default 5
+		help
+			Number of seconds after hold reset pin will time out.
+
 	config ATOMVM_NVS_RESET_INVERT_PIN
 		bool "Invert pin to hold high instead of low"
 		default n

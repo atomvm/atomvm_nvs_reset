@@ -139,7 +139,7 @@ static void monitor_button_task(void *args)
     }
     interrupt_added = true;
 
-    ESP_LOGI(TAG, "monitor_button_task is running.");
+    ESP_LOGI(TAG, "NVS Reset task is running. (pin=%i invert_pin=%s)", pin, invert_pin ? "true" : "false");
 
     unsigned num_clicks = 0;
     uint64_t start_ms = current_ms();
@@ -173,7 +173,7 @@ static void monitor_button_task(void *args)
                         ESP_LOGI(TAG, "Restarting device ...");
                         esp_restart();
                     }
-                } else if (elapsed_ms > CONFIG_ATOMVM_NVS_RESET_HOLD_SECS * 1000) {
+                } else if (elapsed_ms > CONFIG_ATOMVM_NVS_RESET_HOLD_SECS * 1000 && elapsed_ms < CONFIG_ATOMVM_NVS_RESET_HOLD_SECS * 1000 + CONFIG_ATOMVM_NVS_RESET_HOLD_TIMEOUT_SECS) {
                     ESP_LOGI(TAG, "Pin %i released after %llu ms.", pin, elapsed_ms);
                     err = nvs_flash_erase();
                     if (err != ESP_OK) {
