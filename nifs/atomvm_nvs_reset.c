@@ -242,5 +242,5 @@ const struct Nif *atomvm_nvs_reset_get_nif(const char *nifname)
 
 #include <sdkconfig.h>
 #ifdef CONFIG_ATOMVM_NVS_RESET_ENABLE
-REGISTER_NIF_COLLECTION(atomvm_nvs_reset, atomvm_nvs_reset_init, atomvm_nvs_reset_get_nif)
+REGISTER_NIF_COLLECTION(atomvm_nvs_reset, atomvm_nvs_reset_init, NULL, atomvm_nvs_reset_get_nif)
 #endif
